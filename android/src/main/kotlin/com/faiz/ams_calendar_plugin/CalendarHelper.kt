@@ -1,5 +1,6 @@
 package com.faiz.ams_calendar_plugin
 
+import android.accounts.AccountManager
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.ContentValues
@@ -7,9 +8,11 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteException
 import android.net.Uri
+import android.os.Bundle
 import android.provider.CalendarContract
 import android.util.Log
 import java.util.*
+
 
 class CalendarHelper(private val applicationContext: Context) {
     //Change return type List<EventDay> to String Json so Flutter App can parse it
@@ -114,8 +117,8 @@ class CalendarHelper(private val applicationContext: Context) {
     ): Uri? {
         val cr: ContentResolver = applicationContext.contentResolver
         val values = ContentValues()
-        values.put(CalendarContract.Events.DTSTART, beginTime)
-        values.put(CalendarContract.Events.DTEND, endTime)
+        values.put(CalendarContract.Events.DTSTART, getTzAdjustedDate(beginTime))
+        values.put(CalendarContract.Events.DTEND, getTzAdjustedDate(endTime))
         values.put(CalendarContract.Events.TITLE, eventTitle)
         values.put(CalendarContract.Events.EVENT_LOCATION, eventLocation)
         values.put(CalendarContract.Events.DESCRIPTION, eventDescription)
@@ -123,8 +126,9 @@ class CalendarHelper(private val applicationContext: Context) {
         values.put(CalendarContract.Events.HAS_ALARM, 1)
         values.put(
             CalendarContract.Events.EVENT_TIMEZONE,
-            CalendarContract.Calendars.CALENDAR_TIME_ZONE
+            "UTC"
         )
+        values.put(CalendarContract.Events.EVENT_END_TIMEZONE, "UTC")
         val uri: Uri? = cr.insert(CalendarContract.Events.CONTENT_URI, values)
         var eventID: Long = 0
         if (uri != null) if (uri.lastPathSegment != null) eventID = uri.lastPathSegment!!
@@ -138,10 +142,16 @@ class CalendarHelper(private val applicationContext: Context) {
         reminders.put(CalendarContract.Reminders.MINUTES, reminderMinute)
         return try {
             val result = cr.insert(CalendarContract.Reminders.CONTENT_URI, reminders)
+            resyncCalendars()
             result
         } catch (ignored: SQLiteException) {
             null
         }
+    }
+
+    fun getTzAdjustedDate(date: Long): Long {
+        val tzDefault = TimeZone.getDefault()
+        return date - tzDefault.getOffset(date)
     }
 
     private fun getGmailCalendarId(): String? {
@@ -324,6 +334,18 @@ class CalendarHelper(private val applicationContext: Context) {
         var description: String? = null
         fun print() {
             Log.i("Event", "$id - $begin - $organizer - $title - $description")
+        }
+    }
+
+    fun resyncCalendars() {
+        val accounts = AccountManager.get(applicationContext).accounts
+        Log.d("Calendar Plugin", "Refreshing " + accounts.size + " accounts")
+        val authority = CalendarContract.Calendars.CONTENT_URI.authority
+        for (i in accounts.indices) {
+            Log.d("Calendar Plugin", "Refreshing calendars for: " + accounts[i])
+            val extras = Bundle()
+            extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
+            ContentResolver.requestSync(accounts[i], authority, extras)
         }
     }
 }

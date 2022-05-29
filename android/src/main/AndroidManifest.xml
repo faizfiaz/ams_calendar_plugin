@@ -1,3 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.faiz.ams_calendar_plugin">
+
+    <uses-permission
+        android:name="android.permission.GET_ACCOUNTS"
+        android:maxSdkVersion="22" />
 </manifest>

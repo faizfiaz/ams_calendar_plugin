@@ -1,6 +1,6 @@
 name: ams_calendar_plugin
 description: AMS Calendar Plugin.
-version: 0.0.1
+version: 0.0.4
 homepage:
 
 environment:

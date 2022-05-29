@@ -4,6 +4,7 @@ xmlns:tools="http://schemas.android.com/tools"
 
     <uses-permission android:name="android.permission.READ_CALENDAR" />
     <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
 
    <application
         android:label="ams_calendar_plugin_example"

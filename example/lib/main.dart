@@ -42,9 +42,8 @@ class _MyAppState extends State<MyApp> {
       eventTitle: 'Event title',
       eventLocation: 'Event location',
       eventDescription: 'Event description',
-      beginTime: DateTime.now().millisecondsSinceEpoch,
-      endTime:
-          DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
+      beginTime: 1653998400000,
+      endTime: 1653998400000,
       reminderInMinutes: 10,
     );
     AmsCalendarPlugin.addEventToCalendar(model).then((String? result) {
